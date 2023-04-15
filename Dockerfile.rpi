@@ -1,0 +1,30 @@
+ARG BUILD_FROM=arm32v7/alpine:3
+FROM $BUILD_FROM
+
+ENV LANG C.UTF-8
+
+ARG WORKDIR=/app
+ARG USERNAME=app
+
+RUN apk add --no-cache \
+        python3 \
+        py3-pip && \
+    pip3 install \
+        paho-mqtt \
+        requests \
+        PyYAML && \
+    rm -rf \
+        /var/cache/apk/* \
+        /root/.cache/pip && \
+    # Add user and set rights
+    mkdir -p $WORKDIR && \
+    adduser -h $WORKDIR -D -H $USERNAME -u 1000 && \
+    chown -R $USERNAME:root $WORKDIR && chmod -R g+rwX $WORKDIR
+
+WORKDIR $WORKDIR
+
+COPY mediola2mqtt.py .
+
+USER $USERNAME
+
+CMD [ "python3", "-u", "mediola2mqtt.py" ]
